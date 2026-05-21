@@ -51,7 +51,7 @@ validate-manifests:
           echo "✅ Manifests are valid!"
 
   # ─── JOB 3: Validate Helm Charts ────────────────────
- validate-helm:
+  validate-helm:
     name: 🎯 Validate Helm
     runs-on: ubuntu-latest
     steps:
