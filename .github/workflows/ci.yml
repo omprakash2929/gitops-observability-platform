@@ -2,9 +2,12 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 env:
   IMAGE_NAME: omprakash2929/gitops-observability
@@ -12,16 +15,22 @@ env:
 
 jobs:
 
-  # ─── JOB 1: Security Scan ────────────────────────────
+  # ─────────────────────────────────────────────
+  # JOB 1: Security Scan
+  # ─────────────────────────────────────────────
   security-scan:
     name: 🔒 Security Scan
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.24.0
         with:
           scan-type: fs
           scan-ref: .
@@ -29,10 +38,13 @@ jobs:
           format: table
           exit-code: 0
 
-  # ─── JOB 2: Validate K8s Manifests ──────────────────
-validate-manifests:
+  # ─────────────────────────────────────────────
+  # JOB 2: Validate Kubernetes Manifests
+  # ─────────────────────────────────────────────
+  validate-manifests:
     name: ✅ Validate Manifests
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,47 +52,63 @@ validate-manifests:
       - name: Install kubectl
         run: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
           chmod +x kubectl
+
           sudo mv kubectl /usr/local/bin/
 
       - name: Validate Hipster Shop manifests
         run: |
-          kubectl apply --dry-run=client \
+          kubectl apply \
+            --dry-run=client \
             -f apps/hipster-shop/kubernetes-manifests.yaml \
             --validate=false
+
           echo "✅ Manifests are valid!"
 
-  # ─── JOB 3: Validate Helm Charts ────────────────────
+  # ─────────────────────────────────────────────
+  # JOB 3: Validate Helm Charts
+  # ─────────────────────────────────────────────
   validate-helm:
     name: 🎯 Validate Helm
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: latest
+        uses: azure/setup-helm@v4
 
       - name: Helm lint
         run: |
           if [ -d "helm" ]; then
+
             for chart in helm/*/; do
               echo "Linting $chart..."
               helm lint "$chart"
             done
+
             echo "✅ All Helm charts valid!"
+
           else
-            echo "No Helm charts found — skipping"
+            echo "⚠️ No Helm charts found — skipping"
           fi
 
-  # ─── JOB 4: Notify Success ──────────────────────────
+  # ─────────────────────────────────────────────
+  # JOB 4: Notify
+  # ─────────────────────────────────────────────
   notify:
     name: 🔔 Notify
     runs-on: ubuntu-latest
-    needs: [security-scan, validate-manifests, validate-helm]
+
+    needs:
+      - security-scan
+      - validate-manifests
+      - validate-helm
+
     if: always()
+
     steps:
       - name: Pipeline Status
         run: |
