@@ -30,7 +30,7 @@ jobs:
           exit-code: 0
 
   # ─── JOB 2: Validate K8s Manifests ──────────────────
-  validate-manifests:
+validate-manifests:
     name: ✅ Validate Manifests
     runs-on: ubuntu-latest
     steps:
