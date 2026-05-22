@@ -1,0 +1,418 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "type": "datasource",
+      "pluginId": "prometheus"
+    },
+    {
+      "name": "DS_LOKI",
+      "label": "Loki",
+      "type": "datasource",
+      "pluginId": "loki"
+    },
+    {
+      "name": "DS_JAEGER",
+      "label": "Jaeger",
+      "type": "datasource",
+      "pluginId": "jaeger"
+    }
+  ],
+  "title": "🚀 GitOps Observability Platform — Three Pillars",
+  "uid": "gitops-three-pillars",
+  "description": "Production-grade observability — Metrics + Logs + Traces for Hipster Shop 11 Microservices",
+  "tags": ["prometheus", "loki", "jaeger", "hipster-shop", "gitops", "three-pillars"],
+  "timezone": "browser",
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "time": { "from": "now-1h", "to": "now" },
+  "graphTooltip": 1,
+  "panels": [
+
+    { "type": "row", "title": "🏥 PLATFORM HEALTH — Three Pillars Status", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "id": 100, "collapsed": false },
+
+    {
+      "type": "stat", "id": 1,
+      "title": "🟢 Running Pods",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short", "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 8 }, { "color": "green", "value": 11 }] }
+        }
+      },
+      "targets": [{ "expr": "count(kube_pod_info{namespace=\"hipster-shop\"})", "legendFormat": "Pods", "refId": "A" }]
+    },
+
+    {
+      "type": "stat", "id": 2,
+      "title": "⚡ Cluster CPU Usage",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "decimals": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 80 }] }
+        }
+      },
+      "targets": [{ "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))", "legendFormat": "CPU %", "refId": "A" }]
+    },
+
+    {
+      "type": "stat", "id": 3,
+      "title": "💾 Memory Usage",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "decimals": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 85 }] }
+        }
+      },
+      "targets": [{ "expr": "100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))", "legendFormat": "Memory %", "refId": "A" }]
+    },
+
+    {
+      "type": "stat", "id": 4,
+      "title": "🔴 Total Error Logs",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 20 }] }
+        }
+      },
+      "targets": [{ "expr": "sum(count_over_time({namespace=\"hipster-shop\"} |= \"error\" [$__range]))", "legendFormat": "Errors", "refId": "A" }]
+    },
+
+    {
+      "type": "stat", "id": 5,
+      "title": "📊 Total Log Lines",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        }
+      },
+      "targets": [{ "expr": "sum(count_over_time({namespace=\"hipster-shop\"} [$__range]))", "legendFormat": "Logs", "refId": "A" }]
+    },
+
+    {
+      "type": "stat", "id": 6,
+      "title": "🛒 Active Services",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 8 }, { "color": "green", "value": 11 }] }
+        }
+      },
+      "targets": [{ "expr": "count(count by (app) (count_over_time({namespace=\"hipster-shop\"} [$__range])))", "legendFormat": "Services", "refId": "A" }]
+    },
+
+    { "type": "row", "title": "📈 PILLAR 1 — METRICS (Prometheus)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 }, "id": 101, "collapsed": false },
+
+    {
+      "type": "timeseries", "id": 10,
+      "title": "⚡ CPU Usage Per Pod — Hipster Shop",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": { "drawStyle": "line", "fillOpacity": 15, "lineWidth": 2, "pointSize": 4, "showPoints": "auto", "spanNulls": false },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "targets": [{ "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"hipster-shop\", container!=\"\", container!=\"POD\"}[5m])) * 100", "legendFormat": "{{pod}}", "refId": "A" }]
+    },
+
+    {
+      "type": "timeseries", "id": 11,
+      "title": "💾 Memory Usage Per Pod — Hipster Shop",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "drawStyle": "line", "fillOpacity": 15, "lineWidth": 2, "spanNulls": false },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "targets": [{ "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"hipster-shop\", container!=\"\", container!=\"POD\"})", "legendFormat": "{{pod}}", "refId": "A" }]
+    },
+
+    {
+      "type": "gauge", "id": 12,
+      "title": "🔥 Node CPU Usage",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": true, "showThresholdMarkers": true },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "min": 0, "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 80 }] }
+        }
+      },
+      "targets": [{ "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))", "legendFormat": "CPU", "refId": "A" }]
+    },
+
+    {
+      "type": "gauge", "id": 13,
+      "title": "💾 Node Memory Usage",
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": true, "showThresholdMarkers": true },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "min": 0, "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 85 }] }
+        }
+      },
+      "targets": [{ "expr": "100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))", "legendFormat": "Memory", "refId": "A" }]
+    },
+
+    {
+      "type": "table", "id": 14,
+      "title": "📋 Pod Status — All Hipster Shop Services",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "options": { "showHeader": true, "sortBy": [{ "displayName": "Pod", "desc": false }] },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "left", "displayMode": "auto" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Ready" }, "properties": [{ "id": "custom.displayMode", "value": "color-background" }, { "id": "thresholds", "value": { "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } }] }
+        ]
+      },
+      "targets": [{ "expr": "kube_pod_status_ready{namespace=\"hipster-shop\", condition=\"true\"}", "legendFormat": "{{pod}}", "refId": "A", "instant": true, "format": "table" }],
+      "transformations": [{ "id": "organize", "options": { "renameByName": { "pod": "Pod", "Value": "Ready" } } }]
+    },
+
+    {
+      "type": "timeseries", "id": 15,
+      "title": "🌐 Network I/O — Hipster Shop Namespace",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "targets": [
+        { "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"hipster-shop\"}[5m]))", "legendFormat": "📥 RX (receive)", "refId": "A" },
+        { "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"hipster-shop\"}[5m]))", "legendFormat": "📤 TX (transmit)", "refId": "B" }
+      ]
+    },
+
+    {
+      "type": "timeseries", "id": 16,
+      "title": "🔄 Pod Restarts Over Time",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1 },
+          "color": { "mode": "palette-classic" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 3 }] }
+        }
+      },
+      "targets": [{ "expr": "increase(kube_pod_container_status_restarts_total{namespace=\"hipster-shop\"}[1h])", "legendFormat": "{{pod}}", "refId": "A" }]
+    },
+
+    { "type": "row", "title": "📋 PILLAR 2 — LOGS (Loki)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 30 }, "id": 102, "collapsed": false },
+
+    {
+      "type": "timeseries", "id": 20,
+      "title": "📊 Log Volume — All 11 Services",
+      "gridPos": { "h": 8, "w": 14, "x": 0, "y": 31 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "bars", "fillOpacity": 70, "lineWidth": 1 },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "targets": [{ "expr": "sum by (app) (count_over_time({namespace=\"hipster-shop\"} [$__interval]))", "legendFormat": "{{app}}", "refId": "A" }]
+    },
+
+    {
+      "type": "piechart", "id": 21,
+      "title": "🥧 Log Distribution by Service",
+      "gridPos": { "h": 8, "w": 10, "x": 14, "y": 31 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": { "displayLabels": ["name", "percent"], "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] }, "pieType": "donut" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" } },
+      "targets": [{ "expr": "sum by (app) (count_over_time({namespace=\"hipster-shop\"} [$__range]))", "legendFormat": "{{app}}", "refId": "A" }]
+    },
+
+    {
+      "type": "timeseries", "id": 22,
+      "title": "🔴 Error Rate — Per Service",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 39 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum", "max"] }, "tooltip": { "mode": "multi" } },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 25, "lineWidth": 2 },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "targets": [{ "expr": "sum by (app) (count_over_time({namespace=\"hipster-shop\"} |= \"error\" [$__interval]))", "legendFormat": "{{app}}", "refId": "A" }]
+    },
+
+    {
+      "type": "timeseries", "id": 23,
+      "title": "⚠️ Warning Rate — Per Service",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 39 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum"] }, "tooltip": { "mode": "multi" } },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "targets": [{ "expr": "sum by (app) (count_over_time({namespace=\"hipster-shop\"} |= \"warn\" [$__interval]))", "legendFormat": "{{app}}", "refId": "A" }]
+    },
+
+    {
+      "type": "logs", "id": 24,
+      "title": "🔴 All Error Logs — Live Stream",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 47 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": { "dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": true, "showCommonLabels": false, "showLabels": true, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true }
+      ,
+      "targets": [{ "expr": "{namespace=\"hipster-shop\"} |= \"error\"", "refId": "A" }]
+    },
+
+    {
+      "type": "logs", "id": 25,
+      "title": "🛒 Frontend + Checkout — Live Logs",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 57 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": { "dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": true, "showLabels": true, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true },
+      "targets": [{ "expr": "{namespace=\"hipster-shop\", app=~\"frontend|checkoutservice\"}", "refId": "A" }]
+    },
+
+    {
+      "type": "logs", "id": 26,
+      "title": "💰 Payment + Cart — Live Logs",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 57 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": { "dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": true, "showLabels": true, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true },
+      "targets": [{ "expr": "{namespace=\"hipster-shop\", app=~\"paymentservice|cartservice\"}", "refId": "A" }]
+    },
+
+    { "type": "row", "title": "🔍 PILLAR 3 — TRACES (Jaeger)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 67 }, "id": 103, "collapsed": false },
+
+    {
+      "type": "text", "id": 30,
+      "title": "🔍 Distributed Tracing — Jaeger",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 68 },
+      "options": {
+        "mode": "markdown",
+        "content": "## 🔍 Distributed Tracing with Jaeger\n\n**Jaeger traces request flow across all 11 microservices.**\n\n### How to view traces:\n1. Open Grafana **Explore** tab\n2. Select **Jaeger** datasource\n3. Search by Service: `frontend`, `checkoutservice`, `paymentservice`\n4. Click any trace to see the full request journey\n\n### Key trace queries:\n- `service=frontend` → See all frontend requests\n- `service=checkoutservice` → See checkout flows  \n- `service=paymentservice` → See payment processing\n\n> **Pro tip:** Look for traces with **errors** or **high duration** to find performance bottlenecks!"
+      }
+    },
+
+    { "type": "row", "title": "🚨 ALERTS & SLO MONITORING", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 74 }, "id": 104, "collapsed": false },
+
+    {
+      "type": "alertlist", "id": 40,
+      "title": "🚨 Active Alerts",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 75 },
+      "options": { "alertName": "", "dashboardAlerts": false, "groupBy": [], "groupMode": "default", "maxItems": 20, "sortOrder": 3, "stateFilter": { "error": true, "firing": true, "noData": false, "normal": false, "pending": true } }
+    },
+
+    {
+      "type": "timeseries", "id": 41,
+      "title": "📈 SLO — Error Rate (target: <1%)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 75 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "color": { "mode": "palette-classic" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "SLO Threshold (1%)" }, "properties": [{ "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }, { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
+        ]
+      },
+      "targets": [
+        { "expr": "sum(rate(container_cpu_cfs_throttled_periods_total{namespace=\"hipster-shop\"}[5m])) / sum(rate(container_cpu_cfs_periods_total{namespace=\"hipster-shop\"}[5m])) * 100", "legendFormat": "CPU Throttle Rate %", "refId": "A" },
+        { "expr": "vector(1)", "legendFormat": "SLO Threshold (1%)", "refId": "B" }
+      ]
+    },
+
+    { "type": "row", "title": "🏗️ GITOPS — ArgoCD Deployment Info", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 83 }, "id": 105, "collapsed": false },
+
+    {
+      "type": "text", "id": 50,
+      "title": "🏗️ GitOps Architecture",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 84 },
+      "options": {
+        "mode": "markdown",
+        "content": "## 🏗️ GitOps Flow\n\n```\nCode Push → GitHub\n    ↓\nGitHub Actions CI\n├── Trivy Security Scan\n├── Docker Build\n└── DockerHub Push\n    ↓\nArgoCD Detects Change\n    ↓\nAuto-Sync to k3s\n    ↓\nHipster Shop Updated\n    ↓\nMetrics + Logs + Traces\ncollected automatically\n```\n\n**Tools Used:**\n- 🔄 **ArgoCD** — GitOps continuous delivery\n- ⚡ **GitHub Actions** — CI/CD automation  \n- 🐳 **Docker** — Containerization\n- ☸️ **k3s** — Lightweight Kubernetes"
+      }
+    },
+
+    {
+      "type": "text", "id": 51,
+      "title": "📊 Three Pillars Summary",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 84 },
+      "options": {
+        "mode": "markdown",
+        "content": "## 📊 Observability Stack\n\n| Pillar | Tool | Status |\n|--------|------|--------|\n| **Metrics** | Prometheus 3.11.3 | ✅ Running |\n| **Dashboards** | Grafana | ✅ Running |\n| **Logs** | Loki 3.6.7 | ✅ Running |\n| **Log Shipper** | Promtail | ✅ Running |\n| **Traces** | Jaeger | ✅ Running |\n| **Alerts** | Alertmanager | ✅ Running |\n| **GitOps** | ArgoCD v3.4.2 | ✅ Running |\n\n**Monitoring:** 11 Hipster Shop microservices\n\n**Data sources in Grafana:**\n- 🔵 Prometheus\n- 🟡 Loki  \n- 🔴 Jaeger"
+      }
+    }
+
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "hipster-shop", "value": "hipster-shop" },
+        "hide": 0,
+        "includeAll": false,
+        "name": "namespace",
+        "options": [{ "selected": true, "text": "hipster-shop", "value": "hipster-shop" }],
+        "query": "label_values(kube_pod_info, namespace)",
+        "refresh": 2,
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "label": "Namespace"
+      }
+    ]
+  }
+}
+
