@@ -2,39 +2,21 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
-
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
 
-<<<<<<< HEAD
-  # ─────────────────────────────────────────────
-  # JOB 1: Security Scan
-  # ─────────────────────────────────────────────
-=======
->>>>>>> 437caff (fix: update trivy action and kubectl install)
   security-scan:
     name: 🔒 Security Scan
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-<<<<<<< HEAD
-      - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@0.24.0
-=======
       - name: Run Trivy scan
         uses: aquasecurity/trivy-action@master
->>>>>>> 437caff (fix: update trivy action and kubectl install)
         with:
           scan-type: fs
           scan-ref: .
@@ -42,16 +24,9 @@ jobs:
           format: table
           exit-code: 0
 
-<<<<<<< HEAD
-  # ─────────────────────────────────────────────
-  # JOB 2: Validate Kubernetes Manifests
-  # ─────────────────────────────────────────────
-=======
->>>>>>> 437caff (fix: update trivy action and kubectl install)
   validate-manifests:
     name: ✅ Validate Manifests
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,9 +34,7 @@ jobs:
       - name: Install kubectl
         run: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-
           chmod +x kubectl
-
           sudo mv kubectl /usr/local/bin/
           kubectl version --client
 
@@ -69,38 +42,18 @@ jobs:
         run: |
           kubectl apply \
             --dry-run=client \
-<<<<<<< HEAD
-            -f apps/hipster-shop/kubernetes-manifests.yaml \
-            --validate=false
-
-          echo "✅ Manifests are valid!"
-
-  # ─────────────────────────────────────────────
-  # JOB 3: Validate Helm Charts
-  # ─────────────────────────────────────────────
-=======
             --validate=false \
             -f apps/hipster-shop/kubernetes-manifests.yaml
           echo "✅ Manifests valid!"
 
->>>>>>> 437caff (fix: update trivy action and kubectl install)
   validate-helm:
     name: 🎯 Validate Helm
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install Helm
-<<<<<<< HEAD
-        uses: azure/setup-helm@v4
-
-      - name: Helm lint
-        run: |
-          if [ -d "helm" ]; then
-
-=======
         run: |
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm version
@@ -108,41 +61,21 @@ jobs:
       - name: Helm lint check
         run: |
           if [ -d "helm" ] && [ "$(ls -A helm)" ]; then
->>>>>>> 437caff (fix: update trivy action and kubectl install)
             for chart in helm/*/; do
               echo "Linting $chart..."
               helm lint "$chart"
             done
-<<<<<<< HEAD
-
-            echo "✅ All Helm charts valid!"
-
-          else
-            echo "⚠️ No Helm charts found — skipping"
-          fi
-
-  # ─────────────────────────────────────────────
-  # JOB 4: Notify
-  # ─────────────────────────────────────────────
-=======
             echo "✅ Helm charts valid!"
           else
             echo "⚠️ No Helm charts found — skipping"
             exit 0
           fi
 
->>>>>>> 437caff (fix: update trivy action and kubectl install)
   notify:
     name: 🔔 Notify
     runs-on: ubuntu-latest
-
-    needs:
-      - security-scan
-      - validate-manifests
-      - validate-helm
-
+    needs: [security-scan, validate-manifests, validate-helm]
     if: always()
-
     steps:
       - name: Pipeline Status
         run: |
