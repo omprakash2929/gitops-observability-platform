@@ -1,0 +1,78 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: hipster-shop-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+  - name: hipster-shop.rules
+    rules:
+
+    - alert: PodCrashLoopBackOff
+      expr: |
+        rate(kube_pod_container_status_restarts_total
+        {namespace="hipster-shop"}[15m]) > 0
+      for: 5m
+      labels:
+        severity: critical
+        team: devops
+      annotations:
+        summary: "Pod {{ $labels.pod }} is crash looping"
+        description: "Pod {{ $labels.pod }} restarting frequently"
+        runbook_url: "https://github.com/omprakash2929/gitops-observability-platform/blob/main/runbooks/pod-crash-loop.md"
+
+    - alert: HighMemoryUsage
+      expr: |
+        container_memory_usage_bytes{namespace="hipster-shop"}
+        / container_spec_memory_limit_bytes{namespace="hipster-shop"} > 0.85
+      for: 5m
+      labels:
+        severity: warning
+        team: devops
+      annotations:
+        summary: "High memory in {{ $labels.pod }}"
+        description: "Memory usage above 85%"
+        runbook_url: "https://github.com/omprakash2929/gitops-observability-platform/blob/main/runbooks/high-memory.md"
+
+    - alert: PodNotRunning
+      expr: |
+        kube_pod_status_phase{namespace="hipster-shop",
+        phase!="Running"} == 1
+      for: 2m
+      labels:
+        severity: critical
+        team: devops
+      annotations:
+        summary: "Pod {{ $labels.pod }} not running"
+        description: "Pod is in {{ $labels.phase }} state"
+        runbook_url: "https://github.com/omprakash2929/gitops-observability-platform/blob/main/runbooks/pod-not-running.md"
+
+    - alert: HighCPUThrottling
+      expr: |
+        rate(container_cpu_cfs_throttled_periods_total
+        {namespace="hipster-shop"}[5m])
+        / rate(container_cpu_cfs_periods_total
+        {namespace="hipster-shop"}[5m]) > 0.25
+      for: 5m
+      labels:
+        severity: warning
+        team: devops
+      annotations:
+        summary: "CPU throttling in {{ $labels.pod }}"
+        description: "CPU throttled > 25%"
+        runbook_url: "https://github.com/omprakash2929/gitops-observability-platform/blob/main/runbooks/high-cpu.md"
+
+    - alert: PodOOMKilled
+      expr: |
+        kube_pod_container_status_last_terminated_reason
+        {namespace="hipster-shop", reason="OOMKilled"} == 1
+      for: 0m
+      labels:
+        severity: critical
+        team: devops
+      annotations:
+        summary: "OOMKilled: {{ $labels.pod }}"
+        description: "Pod killed due to memory limit"
+        runbook_url: "https://github.com/omprakash2929/gitops-observability-platform/blob/main/runbooks/oom-killed.md"
