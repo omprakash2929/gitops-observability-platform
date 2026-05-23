@@ -69,6 +69,9 @@ Prometheus scrapes metrics from all 12 microservices every 30 seconds. Custom Gr
 
 ![Grafana Dashboard](screenshots/grafana-dashboard.png)
 
+> 📸 **Screenshot:** Prometheus Targets — All UP
+
+![Prometheus Targets](screenshots/prometheus-targets.png)
 ---
 
 ### Pillar 2 — 📋 Logs (Loki + Promtail)
